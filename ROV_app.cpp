@@ -358,7 +358,7 @@ ROV_App::SetSpeed(int iX, int iY) {
 void
 ROV_App::ErrorHandler(QString sErrorString) {
   // MUST BE MODIFIED !!
-  qDebug() << "Error ! " << sErrorString << "\r\n";
+  qDebug() << "Error ! " << sErrorString << endl;
 }
 
 
@@ -372,17 +372,20 @@ ROV_App::writeRequest(QByteArray requestData) {
         responseData += serialPort.readAll();
       QString response(responseData);
       if(response != QString(ACK)) {
-        ErrorHandler(sCommand);
-        return -1;
+        ErrorHandler(tr("NACK on Command %1: expecting %2 read %3")
+                     .arg(int(requestData.at(0)))
+                     .arg(int(ACK))
+                     .arg(int(response.at(0).toLatin1())));
+        //return -1;
       }
     } else {
-      ErrorHandler(sCommand + tr("\r\nWait read response timeout %1")
+      ErrorHandler(tr(" Wait read response timeout %1")
                    .arg(QTime::currentTime().toString()));
       return -1;
     }
   } else {
-//    ErrorHandler(sCommand + tr("\r\nWait write request timeout %1")
-//                 .arg(QTime::currentTime().toString()));
+    ErrorHandler(tr(" Wait write request timeout %1")
+                 .arg(QTime::currentTime().toString()));
     return -1;
   }
   return 0;
