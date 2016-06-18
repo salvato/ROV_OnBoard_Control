@@ -66,8 +66,9 @@ public slots:
   void tcpClientDisconnected();
   void readFromServer();
   void periodicUpdateWidgets();
-  void onWatchDogTimerTimeout(ShimmerSensor *currentShimmer);
+  void onShimmerWatchDogTimeout(ShimmerSensor *currentShimmer);
   void forwardDebugMessage(QString sDebugMessage);
+  void onConnectionWatchDogTimeout();
 
 private slots:
   void switchOff();
@@ -112,6 +113,7 @@ private:
   int  openTcpSession();
   int  connectToArduino();
   void executeCommand(int iTarget, int iValue);
+  int  usbReset(QString sDevice);
 
   bool CheckBluetoothSupport();
   void initShimmer(ShimmerSensor* currentShimmer);
@@ -139,7 +141,7 @@ private:
   bool         bUseBluetooth;
   bool         bUseLowNoiseAccelerator;
   bool         bEnableGyroOnTheFlyCalibration;
-  qint32       watchDogTime;
+  qint32       shimmerWatchDogTime;
 
   // For Sensor Configuration
   qint32       activeSensors;
@@ -203,6 +205,10 @@ private:
   qint32        updateTime;
   QTimer        iWantToCloseTimer;
   qint32        niWantToCloseAttempt;
+  QTimer        connectionWatchDogTimer;
+  qint32        connectionWatchDogTime;
+
+  QString       sUsbDeviceFile;
 };
 
 #endif // ROV_APP_H

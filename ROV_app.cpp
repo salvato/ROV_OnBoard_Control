@@ -1,7 +1,11 @@
 #include "ROV_app.h"
 
 #include <math.h>
+#include <errno.h>
 #include <unistd.h>// for sleep()
+#include <fcntl.h>
+#include <sys/ioctl.h>
+#include <linux/usbdevice_fs.h>
 #include <QDebug>
 #include <QtNetwork>
 #include <QtSerialPort/QSerialPortInfo>
@@ -24,7 +28,7 @@ ROV_App::ROV_App(int argc, char *argv[])
   , bUseBluetooth(false)
   , bUseLowNoiseAccelerator(false)
   , bEnableGyroOnTheFlyCalibration(true)
-  , watchDogTime(3000)
+  , shimmerWatchDogTime(30000)
 
 #ifdef Q_PROCESSOR_ARM
   , shimmerBtAdress(QBluetoothAddress("00:06:66:66:94:B9"))
@@ -59,9 +63,39 @@ ROV_App::ROV_App(int argc, char *argv[])
   , iLastUpDown(0)
 
   , updateTime(100)
+  , connectionWatchDogTime(10000)
 {
   sInformation.setString(&sDebugMessage);
 
+  QString sUsbDevicesFile = "/home/gabriele/usbDevices.txt";
+  system((QString("lsusb > ") + sUsbDevicesFile).toLatin1());
+  QFile usbDevicesFile(sUsbDevicesFile);
+  if(!usbDevicesFile.exists())
+      return;
+  if(!usbDevicesFile.open(QIODevice::ReadOnly | QIODevice::Text))
+      return;
+  QTextStream usbDevices(&usbDevicesFile);
+  QString sLine;
+  while(!usbDevices.atEnd()) {
+    sLine = usbDevices.readLine();
+    if(sLine.contains("Bluetooth")) {
+      QString sBus, sDev;
+      QStringList sValues = sLine.split(QString(" "));
+      for(int i=0; i<sValues.count()-2; i++) {
+          if(sValues.at(i) == "Bus") {
+              sBus = sValues.at(i+1);
+              i++;
+          }
+          if(sValues.at(i) == "Device") {
+              sDev = sValues.at(i+1);
+              i++;
+          }
+      }
+      sUsbDeviceFile = QString("/dev/bus/usb/%1/%2").arg(sBus).arg(sDev.left(3));
+    }
+  }
+//  if(!sUsbDevicesFile.isEmpty())
+//      usbReset(sUsbDeviceFile);
   // Motore Destro
   minMotorDx = -10.0;
   maxMotorDx =  10.0;
@@ -71,6 +105,8 @@ ROV_App::ROV_App(int argc, char *argv[])
   maxMotorSn =  10.0;
 
   init();
+  connect(&connectionWatchDogTimer, SIGNAL(timeout()),
+          this, SLOT(onConnectionWatchDogTimeout()));
 }
 
 
@@ -151,6 +187,14 @@ ROV_App::init() {
   }
 
   bUseBluetooth = CheckBluetoothSupport();
+
+//  if(!bUseBluetooth) {
+//      sCommand = QString("rfcomm unbind 0");
+//      int iResult = system(sCommand.toLatin1());
+//      sCommand = QString("rfcomm bind 0 ") + shimmerBtAdress.toString();
+//      iResult = system(sCommand.toLatin1());
+//  }
+
   // Sensors to enable for each Shimmer
   activeSensors    = Shimmer3::SensorGyro |
                      Shimmer3::SensorMag;
@@ -184,7 +228,7 @@ ROV_App::init() {
   connect(pShimmerSensor, SIGNAL(shimmerFailedToConnect(ShimmerSensor*)),
           this, SLOT(onShimmerFailedToConnect(ShimmerSensor*)));
   connect(pShimmerSensor, SIGNAL(watchDogTimerTimeout(ShimmerSensor*)),
-          this, SLOT(onWatchDogTimerTimeout(ShimmerSensor*)));
+          this, SLOT(onShimmerWatchDogTimeout(ShimmerSensor*)));
 
   // Initialize Shimmer Messages
   connect(pShimmerSensor, SIGNAL(shimmerStatusReceived(ShimmerSensor*, quint8)),
@@ -216,11 +260,6 @@ ROV_App::init() {
 //    return -1;
   }
 
-  if(pShimmerSensor->currentStatus == connectedStatus) {
-    initShimmer(pShimmerSensor);
-    updateTimer.start(updateTime);
-  }
-
   return SetSpeed(0, 0);
 }
 
@@ -235,6 +274,8 @@ ROV_App::onNewShimmerConnected(ShimmerSensor* currentShimmer) {
   qDebug() << sDebugMessage;
 
   currentShimmer->currentStatus = connectedStatus;
+  initShimmer(currentShimmer);
+  updateTimer.start(updateTime);
 }
 
 
@@ -271,6 +312,17 @@ ROV_App::onShimmerDisconnected(ShimmerSensor* currentShimmer) {
                 << currentShimmer->myRemoteAddress.toString()
                 << " Disconnected.";
   qDebug() << sDebugMessage;
+  if(bUseBluetooth)
+    currentShimmer->BtSetup();
+  else
+    currentShimmer->ComSetup();
+
+  sleep(3);
+
+  if(currentShimmer->currentStatus == connectedStatus) {
+    initShimmer(currentShimmer);
+    updateTimer.start(updateTime);
+  }
   //destroy();// <<========================================== To Be Changed !!!!!!!!!!!!!
 }
 
@@ -310,7 +362,7 @@ int
 ROV_App::connectToArduino() {
   QList<QSerialPortInfo> serialPorts = QSerialPortInfo::availablePorts();
   if(serialPorts.isEmpty()) {
-    ErrorHandler(QString("no Arduino is connected !"));
+    ErrorHandler(QString("no Arduino's connected !"));
     return -1;
   }
   bool found = false;
@@ -706,6 +758,10 @@ ROV_App::newTcpConnection() {
                 << " Connected to: "
                 << pTcpServerConnection->peerAddress().toString();
   qDebug() << sDebugMessage;
+  SetSpeed(0, 0);
+  SetAirValveOut(AIR_VALVE_OFF);
+  SetAirValveIn(AIR_VALVE_OFF);
+  connectionWatchDogTimer.start(connectionWatchDogTime);
 }
 
 
@@ -717,7 +773,7 @@ ROV_App::tcpClientDisconnected() {
                 << pTcpServerConnection->peerAddress().toString();
   qDebug() << sDebugMessage;
   pTcpServerConnection = NULL;
-
+  connectionWatchDogTimer.stop();
   SetSpeed(0, 0);
   SetAirValveOut(AIR_VALVE_OFF);
   SetAirValveIn(AIR_VALVE_ON);
@@ -760,6 +816,7 @@ ROV_App::executeCommand(int iTarget, int iValue) {
   } else if(iTarget == UpDownAxis) {
     SetUpDown(iValue);
   } else if(iTarget == 126) {
+      connectionWatchDogTimer.start(connectionWatchDogTime);
       if(pTcpServerConnection) {
         if(pTcpServerConnection->isOpen()) {
           QString message;
@@ -1103,7 +1160,7 @@ ROV_App::startStreaming(ShimmerSensor *currentShimmer) {
     qDebug() << sDebugMessage;
     currentShimmer->writeCommand(&data, 1);
     currentShimmer->currentStatus = startingStreamingStatus;
-    currentShimmer->startWatchDogTimer(watchDogTime);
+    currentShimmer->startWatchDogTimer(shimmerWatchDogTime);
   }
 }
 
@@ -1201,11 +1258,75 @@ ROV_App::periodicUpdateWidgets() {
 
 
 void
-ROV_App::onWatchDogTimerTimeout(ShimmerSensor *currentShimmer) {
+ROV_App::onShimmerWatchDogTimeout(ShimmerSensor *currentShimmer) {
   sDebugMessage = QString();
   sInformation << dateTime.currentDateTime().toString()
-               << " Shimmer at address: "
+               << " "
                << currentShimmer->myRemoteAddress.toString()
                << " Receiving Timeout";
   qDebug() << sDebugMessage;
+  if(pShimmerSensor) {
+    if(pShimmerSensor->currentStatus != unconnectedStatus) {
+        sDebugMessage = QString();
+        sInformation << dateTime.currentDateTime().toString()
+                     << " "
+                     << currentShimmer->myRemoteAddress.toString()
+                     << " Stop Streaming";
+        qDebug() << sDebugMessage;
+        quint8 data;
+        data = (quint8)Shimmer3::STOP_STREAMING_COMMAND;
+        pShimmerSensor->currentStatus = stoppingStreamingStatus;
+        pShimmerSensor->writeCommand(&data, 1);
+        pShimmerSensor->stopWatchDogTimer();
+    }
+  }
+}
+
+
+void
+ROV_App::onConnectionWatchDogTimeout() {
+  sDebugMessage = QString();
+  sInformation << dateTime.currentDateTime().toString()
+               << " Connection Timeout";
+  qDebug() << sDebugMessage;
+  if(pTcpServerConnection) {
+      pTcpServerConnection->close();
+  }
+}
+
+
+int
+ROV_App::usbReset(QString sDevice) {
+    int fd = open(sDevice.toLatin1(), O_WRONLY);
+    if(fd < 0) {
+        sDebugMessage = QString();
+        sInformation << dateTime.currentDateTime().toString()
+                     << " Error opening USB device file";
+        qDebug() << sDebugMessage;
+        return -1;
+    }
+    int rc = ioctl(fd, USBDEVFS_RESET, 0);
+    if(rc < 0) {
+      QString sError;
+      if(errno == EBADF)  sError = " fd is not a valid file descriptor.";
+      if(errno == EFAULT) sError = " argp references an inaccessible memory area.";
+      if(errno == EINVAL) sError = " request or argp is not valid.";
+      if(errno == ENOTTY) sError = " fd is not associated with a character special device.";
+      if(errno == ENOTTY) sError+= " The specified request does not apply to the kind of object that the file descriptor fd references.";
+      sDebugMessage = QString();
+      sInformation << dateTime.currentDateTime().toString()
+                   << " ioctl error in resetting USB device file "
+                   << sDevice
+                   << sError;
+      qDebug() << sDebugMessage;
+      return -1;
+    }
+    close(fd);
+    sDebugMessage = QString();
+    sInformation << dateTime.currentDateTime().toString()
+                 << " Reset of USB device file "
+                 << sDevice
+                 << " done !";
+    qDebug() << sDebugMessage;
+    return 0;
 }

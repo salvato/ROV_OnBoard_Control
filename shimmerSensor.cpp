@@ -234,7 +234,7 @@ ShimmerSensor::stopWatchDogTimer() {
 void
 ShimmerSensor::onWatchDogTimerTimeout() {
   emit watchDogTimerTimeout(this);
-  watchDogTimer.start();
+  //watchDogTimer.start();
 }
 
 
