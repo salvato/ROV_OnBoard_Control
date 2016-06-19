@@ -31,7 +31,8 @@ ROV_App::ROV_App(int argc, char *argv[])
   , shimmerWatchDogTime(30000)
 
 #ifdef Q_PROCESSOR_ARM
-  , shimmerBtAdress(QBluetoothAddress("00:06:66:66:94:B9"))
+//  , shimmerBtAdress(QBluetoothAddress("00:06:66:66:94:B9"))
+  , shimmerBtAdress(QBluetoothAddress("00:06:66:66:93:FF"))
 #else
   , shimmerBtAdress(QBluetoothAddress("00:06:66:66:93:FF"))
 #endif
@@ -67,7 +68,7 @@ ROV_App::ROV_App(int argc, char *argv[])
 {
   sInformation.setString(&sDebugMessage);
 
-  QString sUsbDevicesFile = "/home/gabriele/usbDevices.txt";
+  QString sUsbDevicesFile = "/home/pi/usbDevices.txt";
   system((QString("lsusb > ") + sUsbDevicesFile).toLatin1());
   QFile usbDevicesFile(sUsbDevicesFile);
   if(!usbDevicesFile.exists())
@@ -94,8 +95,8 @@ ROV_App::ROV_App(int argc, char *argv[])
       sUsbDeviceFile = QString("/dev/bus/usb/%1/%2").arg(sBus).arg(sDev.left(3));
     }
   }
-//  if(!sUsbDevicesFile.isEmpty())
-//      usbReset(sUsbDeviceFile);
+  if(!sUsbDevicesFile.isEmpty())
+      usbReset(sUsbDeviceFile);
   // Motore Destro
   minMotorDx = -10.0;
   maxMotorDx =  10.0;
@@ -188,12 +189,12 @@ ROV_App::init() {
 
   bUseBluetooth = CheckBluetoothSupport();
 
-//  if(!bUseBluetooth) {
-//      sCommand = QString("rfcomm unbind 0");
-//      int iResult = system(sCommand.toLatin1());
-//      sCommand = QString("rfcomm bind 0 ") + shimmerBtAdress.toString();
-//      iResult = system(sCommand.toLatin1());
-//  }
+  if(!bUseBluetooth) {
+      sCommand = QString("rfcomm unbind 0");
+      int iResult = system(sCommand.toLatin1());
+      sCommand = QString("rfcomm bind 0 ") + shimmerBtAdress.toString();
+      iResult = system(sCommand.toLatin1());
+  }
 
   // Sensors to enable for each Shimmer
   activeSensors    = Shimmer3::SensorGyro |
