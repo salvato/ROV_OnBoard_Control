@@ -12,6 +12,69 @@
 
 #include "graddes3dorientation.h"
 
+/*
+ *
+void myMessageOutput(QtMsgType type, const QMessageLogContext &context, const QString &msg)
+  {
+      QByteArray localMsg = msg.toLocal8Bit();
+      switch (type) {
+      case QtDebugMsg:
+          fprintf(stderr, "Debug: %s (%s:%u, %s)\n", localMsg.constData(), context.file, context.line, context.function);
+          break;
+      case QtInfoMsg:
+          fprintf(stderr, "Info: %s (%s:%u, %s)\n", localMsg.constData(), context.file, context.line, context.function);
+          break;
+      case QtWarningMsg:
+          fprintf(stderr, "Warning: %s (%s:%u, %s)\n", localMsg.constData(), context.file, context.line, context.function);
+          break;
+      case QtCriticalMsg:
+          fprintf(stderr, "Critical: %s (%s:%u, %s)\n", localMsg.constData(), context.file, context.line, context.function);
+          break;
+      case QtFatalMsg:
+          fprintf(stderr, "Fatal: %s (%s:%u, %s)\n", localMsg.constData(), context.file, context.line, context.function);
+          abort();
+      }
+  }
+
+  int main(int argc, char **argv)
+  {
+      qInstallMessageHandler(myMessageOutput);
+      QApplication app(argc, argv);
+      ...
+      return app.exec();
+  }
+
+*/
+
+
+/*
+ *
+
+// how to show the Raspberry PI's Temperature.
+/opt/vc/bin/vcgencmd measure_temp
+
+*/
+
+
+/*
+
+// rename example
+#include <stdio.h>
+
+int main ()
+{
+  int result;
+  char oldname[] ="oldname.txt";
+  char newname[] ="newname.txt";
+  result= rename( oldname , newname );
+  if ( result == 0 )
+    puts ( "File successfully renamed" );
+  else
+    perror( "Error renaming file" );
+  return 0;
+}
+
+*/
 
 ROV_App::ROV_App(int argc, char *argv[])
   : QCoreApplication(argc, argv)
@@ -68,35 +131,36 @@ ROV_App::ROV_App(int argc, char *argv[])
 {
   sInformation.setString(&sDebugMessage);
 
-  QString sUsbDevicesFile = "/home/pi/usbDevices.txt";
-  system((QString("lsusb > ") + sUsbDevicesFile).toLatin1());
-  QFile usbDevicesFile(sUsbDevicesFile);
-  if(!usbDevicesFile.exists())
-      return;
-  if(!usbDevicesFile.open(QIODevice::ReadOnly | QIODevice::Text))
-      return;
-  QTextStream usbDevices(&usbDevicesFile);
-  QString sLine;
-  while(!usbDevices.atEnd()) {
-    sLine = usbDevices.readLine();
-    if(sLine.contains("Bluetooth")) {
-      QString sBus, sDev;
-      QStringList sValues = sLine.split(QString(" "));
-      for(int i=0; i<sValues.count()-2; i++) {
-          if(sValues.at(i) == "Bus") {
-              sBus = sValues.at(i+1);
-              i++;
-          }
-          if(sValues.at(i) == "Device") {
-              sDev = sValues.at(i+1);
-              i++;
-          }
-      }
-      sUsbDeviceFile = QString("/dev/bus/usb/%1/%2").arg(sBus).arg(sDev.left(3));
-    }
-  }
-  if(!sUsbDevicesFile.isEmpty())
-      usbReset(sUsbDeviceFile);
+//  QString sUsbDevicesFile = "./usbDevices.txt";
+//  system((QString("lsusb > ") + sUsbDevicesFile).toLatin1());
+//  QFile usbDevicesFile(sUsbDevicesFile);
+//  if(usbDevicesFile.exists()) {
+//    if(usbDevicesFile.open(QIODevice::ReadOnly | QIODevice::Text)) {
+//      QTextStream usbDevices(&usbDevicesFile);
+//      QString sLine;
+//      while(!usbDevices.atEnd()) {
+//        sLine = usbDevices.readLine();
+//        if(sLine.contains("Bluetooth")) {
+//          QString sBus, sDev;
+//          QStringList sValues = sLine.split(QString(" "));
+//          for(int i=0; i<sValues.count()-2; i++) {
+//            if(sValues.at(i) == "Bus") {
+//              sBus = sValues.at(i+1);
+//              i++;
+//            }
+//            if(sValues.at(i) == "Device") {
+//              sDev = sValues.at(i+1);
+//              i++;
+//            }
+//          }
+//          sUsbDeviceFile = QString("/dev/bus/usb/%1/%2").arg(sBus).arg(sDev.left(3));
+//        }
+//      }
+//      if(!sUsbDevicesFile.isEmpty())
+//        usbReset(sUsbDeviceFile);
+//    }
+//  }
+
   // Motore Destro
   minMotorDx = -10.0;
   maxMotorDx =  10.0;
@@ -189,12 +253,12 @@ ROV_App::init() {
 
   bUseBluetooth = CheckBluetoothSupport();
 
-  if(!bUseBluetooth) {
-      sCommand = QString("rfcomm unbind 0");
-      int iResult = system(sCommand.toLatin1());
-      sCommand = QString("rfcomm bind 0 ") + shimmerBtAdress.toString();
-      iResult = system(sCommand.toLatin1());
-  }
+//  if(!bUseBluetooth) {
+//    sCommand = QString("rfcomm unbind 0");
+//    int iResult = system(sCommand.toLatin1());
+//    sCommand = QString("rfcomm bind 0 ") + shimmerBtAdress.toString();
+//    iResult = system(sCommand.toLatin1());
+//  }
 
   // Sensors to enable for each Shimmer
   activeSensors    = Shimmer3::SensorGyro |
@@ -775,9 +839,6 @@ ROV_App::tcpClientDisconnected() {
   qDebug() << sDebugMessage;
   pTcpServerConnection = NULL;
   connectionWatchDogTimer.stop();
-  SetSpeed(0, 0);
-  SetAirValveOut(AIR_VALVE_OFF);
-  SetAirValveIn(AIR_VALVE_ON);
 }
 
 
@@ -1286,6 +1347,9 @@ ROV_App::onShimmerWatchDogTimeout(ShimmerSensor *currentShimmer) {
 
 void
 ROV_App::onConnectionWatchDogTimeout() {
+  SetSpeed(0, 0);
+  SetAirValveOut(AIR_VALVE_OFF);
+  SetAirValveIn(AIR_VALVE_ON);
   sDebugMessage = QString();
   sInformation << dateTime.currentDateTime().toString()
                << " Connection Timeout";

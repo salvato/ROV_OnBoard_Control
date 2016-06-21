@@ -357,6 +357,9 @@ ShimmerSensor::serialRead() {
   while(serialPort->bytesAvailable()) {
     readBuffer.append(serialPort->readAll());
   }
+  if(watchDogTimer.isActive()) {
+    watchDogTimer.start();
+  }
   decodeCommand();
 }
 
@@ -392,6 +395,9 @@ ShimmerSensor::readSocket() {
   if(!socket) return;
   while(socket->bytesAvailable()) {
     readBuffer.append(socket->readAll());
+  }
+  if(watchDogTimer.isActive()) {
+    watchDogTimer.start();
   }
   decodeCommand();
 }
@@ -591,6 +597,7 @@ ShimmerSensor::writeCommand(const quint8 *data, qint32 nbytes) {
 
 void
 ShimmerSensor::processPacket(ShimmerDataPacket* pDataPacket) {
+
   for (qint32 i=0; i<pDataPacket->GetNumChannels(); i++) {
     if (GetChannel(i) == (qint32)Shimmer3::XMag ||
         GetChannel(i) == (qint32)Shimmer3::YMag ||
@@ -692,7 +699,9 @@ ShimmerSensor::processPacket(ShimmerDataPacket* pDataPacket) {
   for(int i=0; i<3; i++)
     dataGyroCalRad[i] = dataGyroCal[i] * M_PI / 180.0;
 
-// Gradient descent update!
+  // >>>>>>>>>>>>>>>>>>>>>>>>
+  // Gradient descent update!
+  // >>>>>>>>>>>>>>>>>>>>>>>>
 
   updatedOrientation = mOrientation->MadgwickAHRSupdate(dataAccelCal[0],
                                                         dataAccelCal[1],
@@ -733,9 +742,6 @@ ShimmerSensor::processPacket(ShimmerDataPacket* pDataPacket) {
                             currentOrientation.z()/s);
   }
 
-  if(watchDogTimer.isActive()) {
-    watchDogTimer.start();
-  }
 }
 
 
