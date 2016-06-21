@@ -753,9 +753,6 @@ ROV_App::tcpError(QAbstractSocket::SocketError error) {
   if(error == QAbstractSocket::ConnectionRefusedError)
     sInformation << " The connection was refused by the peer (or timed out).";
   else if(error == QAbstractSocket::RemoteHostClosedError) {
-    SetSpeed(0, 0);
-    SetAirValveOut(AIR_VALVE_OFF);
-    SetAirValveIn(AIR_VALVE_ON);
     sInformation << " The remote host closed the connection.";
     qDebug() << sDebugMessage;
     return;
