@@ -45,28 +45,37 @@ const QString Shimmer3::ExgGainString[] =
   "12"
 };
 
-double Shimmer3::SensitivityMatrixLowNoiseAccel2gShimmer3[3][3]   = { { 83, 0, 0 }, { 0, 83, 0 }, { 0, 0, 83 } };
-double Shimmer3::AlignmentMatrixLowNoiseAccelShimmer3[3][3]       = { { 0, -1, 0 }, { -1, 0, 0 }, { 0, 0, -1 } }; 	//Default Values for Accelerometer Calibration
-double Shimmer3::OffsetVectorAccelLowNoiseShimmer3[3]             = {  2047 ,  2047 ,  2047  };				//Default Values for Accelerometer Calibration
 
-double Shimmer3::SensitivityMatrixWideRangeAccel2gShimmer3[3][3]  = { { 1631, 0, 0 }, { 0, 1631, 0 }, { 0, 0, 1631 } };
-double Shimmer3::SensitivityMatrixWideRangeAccel4gShimmer3[3][3]  = { { 815, 0, 0 }, { 0, 815, 0 }, { 0, 0, 815 } };
-double Shimmer3::SensitivityMatrixWideRangeAccel8gShimmer3[3][3]  = { { 408, 0, 0 }, { 0, 408, 0 }, { 0, 0, 408 } };
-double Shimmer3::SensitivityMatrixWideRangeAccel16gShimmer3[3][3] = { { 135, 0, 0 }, { 0, 135, 0 }, { 0, 0, 135 } };
-double Shimmer3::AlignmentMatrixWideRangeAccelShimmer3[3][3]      = { { -1, 0, 0 }, { 0, -1, 0 }, { 0, 0, -1 } }; 	//Default Values for Accelerometer Calibration
-double Shimmer3::OffsetVectorAccelWideRangeShimmer3[3]            = {  0 ,  0 ,  0  };				//Default Values for Accelerometer Calibration
+Shimmer3::Shimmer3() {
+    //SensitivityMatrixLowNoiseAccel2gShimmer3   = { { 83, 0, 0 }, { 0, 83, 0 }, { 0, 0, 83 } };
+    //AlignmentMatrixLowNoiseAccelShimmer3       = { { 0, -1, 0 }, { -1, 0, 0 }, { 0, 0, -1 } }; 	//Default Values for Accelerometer Calibration
+    //OffsetVectorAccelLowNoiseShimmer3          = {  2047 ,  2047 ,  2047  };				//Default Values for Accelerometer Calibration
 
-//double Shimmer3::SensitivityMatrixAccel2gShimmer3[3][3] = { { 76, 0, 0 }, { 0, 76, 0 }, { 0, 0, 76 } };
-//double Shimmer3::SensitivityMatrixAccel4gShimmer3[3][3] = { { 38, 0, 0 }, { 0, 38, 0 }, { 0, 0, 38 } };
-//double Shimmer3::SensitivityMatrixAccel6gShimmer3[3][3] = { { 25, 0, 0 }, { 0, 25, 0 }, { 0, 0, 25 } };
+    //SensitivityMatrixWideRangeAccel2gShimmer3  = { { 1631, 0, 0 }, { 0, 1631, 0 }, { 0, 0, 1631 } };
+    //SensitivityMatrixWideRangeAccel4gShimmer3  = { { 815, 0, 0 }, { 0, 815, 0 }, { 0, 0, 815 } };
+    //SensitivityMatrixWideRangeAccel8gShimmer3  = { { 408, 0, 0 }, { 0, 408, 0 }, { 0, 0, 408 } };
+    //SensitivityMatrixWideRangeAccel16gShimmer3 = { { 135, 0, 0 }, { 0, 135, 0 }, { 0, 0, 135 } };
+    //AlignmentMatrixWideRangeAccelShimmer3      = { { -1, 0, 0 }, { 0, -1, 0 }, { 0, 0, -1 } }; 	//Default Values for Accelerometer Calibration
+    //OffsetVectorAccelWideRangeShimmer3         = {  0 ,  0 ,  0  };				//Default Values for Accelerometer Calibration
 
-double Shimmer3::AlignmentMatrixGyroShimmer3[3][3]   = { { 0, -1, 0 }, { -1, 0, 0 }, { 0, 0, -1 } }; 				//Default Values for Gyroscope Calibration
-double Shimmer3::SensitivityMatrixGyroShimmer3[3][3] = { { 131, 0, 0 }, { 0, 131, 0 }, { 0, 0, 131 } }; 		//Default Values for Gyroscope Calibration
-double Shimmer3::OffsetVectorGyroShimmer3[3]         = {  0 ,  0 ,  0  };						//Default Values for Gyroscope Calibration
+    //double Shimmer3::SensitivityMatrixAccel2gShimmer3[3][3] = { { 76, 0, 0 }, { 0, 76, 0 }, { 0, 0, 76 } };
+    //double Shimmer3::SensitivityMatrixAccel4gShimmer3[3][3] = { { 38, 0, 0 }, { 0, 38, 0 }, { 0, 0, 38 } };
+    //double Shimmer3::SensitivityMatrixAccel6gShimmer3[3][3] = { { 25, 0, 0 }, { 0, 25, 0 }, { 0, 0, 25 } };
 
-double Shimmer3::AlignmentMatrixMagShimmer3[3][3]   = { { 1, 0, 0 }, { 0, -1, 0 }, { 0, 0, 1 } }; 				//Default Values for Magnetometer Calibration
-double Shimmer3::SensitivityMatrixMagShimmer3[3][3] = { { 420, 0, 0 }, { 0, 450, 0 }, { 0, 0, 520 } }; 			//Default Values for Magnetometer Calibration
-double Shimmer3::OffsetVectorMagShimmer3[3]         = {  180 ,  50 ,  50  };
+    //double Shimmer3::AlignmentMatrixGyroShimmer3[3][3]   = { { 0, -1, 0 }, { -1, 0, 0 }, { 0, 0, -1 } }; 				//Default Values for Gyroscope Calibration
+    //double Shimmer3::SensitivityMatrixGyroShimmer3[3][3] = { { 131, 0, 0 }, { 0, 131, 0 }, { 0, 0, 131 } }; 		//Default Values for Gyroscope Calibration
+    //double Shimmer3::OffsetVectorGyroShimmer3[3]         = {  0 ,  0 ,  0  };						//Default Values for Gyroscope Calibration
+
+    //double Shimmer3::AlignmentMatrixMagShimmer3[3][3]   = { { 1, 0, 0 }, { 0, -1, 0 }, { 0, 0, 1 } }; 				//Default Values for Magnetometer Calibration
+    //double Shimmer3::SensitivityMatrixMagShimmer3[3][3] = { { 420, 0, 0 }, { 0, 450, 0 }, { 0, 0, 520 } }; 			//Default Values for Magnetometer Calibration
+    //double Shimmer3::OffsetVectorMagShimmer3[3]         = {  180 ,  50 ,  50  };
+}
+
+
+Shimmer3::~Shimmer3() {
+
+}
+
 
 const QString Shimmer3::SamplingRatesString[] =
 {

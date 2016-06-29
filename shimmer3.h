@@ -6,6 +6,8 @@
 class Shimmer3
 {
 public:
+  Shimmer3();
+  ~Shimmer3();
   static const QString ApplicationName;
   static int NumSensorBytes;
 
@@ -59,28 +61,28 @@ public:
     RANGE_8_1Ga = 7//+/-8.1 Gauss
   };
 
-  // Low Noise Analog Accellerometer
-  static double SensitivityMatrixLowNoiseAccel2gShimmer3[3][3];
-  static double AlignmentMatrixLowNoiseAccelShimmer3[3][3];
-  static double OffsetVectorAccelLowNoiseShimmer3[3];
+  // Low Noise Analog Accelerometer
+  double SensitivityMatrixLowNoiseAccel2gShimmer3[3][3];
+  double AlignmentMatrixLowNoiseAccelShimmer3[3][3];
+  double OffsetVectorAccelLowNoiseShimmer3[3];
 
   // Wide Range Digital Accellerometer
-  static double SensitivityMatrixWideRangeAccel2gShimmer3[3][3];
-  static double SensitivityMatrixWideRangeAccel4gShimmer3[3][3];
-  static double SensitivityMatrixWideRangeAccel8gShimmer3[3][3];
-  static double SensitivityMatrixWideRangeAccel16gShimmer3[3][3];
-  static double AlignmentMatrixWideRangeAccelShimmer3[3][3];
-  static double OffsetVectorAccelWideRangeShimmer3[3];
+  double SensitivityMatrixWideRangeAccel2gShimmer3[3][3];
+  double SensitivityMatrixWideRangeAccel4gShimmer3[3][3];
+  double SensitivityMatrixWideRangeAccel8gShimmer3[3][3];
+  double SensitivityMatrixWideRangeAccel16gShimmer3[3][3];
+  double AlignmentMatrixWideRangeAccelShimmer3[3][3];
+  double OffsetVectorAccelWideRangeShimmer3[3];
 
   // Gyroscope
-  static double AlignmentMatrixGyroShimmer3[3][3];
-  static double SensitivityMatrixGyroShimmer3[3][3];
-  static double OffsetVectorGyroShimmer3[3];
+  double AlignmentMatrixGyroShimmer3[3][3];
+  double SensitivityMatrixGyroShimmer3[3][3];
+  double OffsetVectorGyroShimmer3[3];
 
   // Magnetic Sensor
-  static double AlignmentMatrixMagShimmer3[3][3];
-  static double SensitivityMatrixMagShimmer3[3][3];
-  static double OffsetVectorMagShimmer3[3];
+  double AlignmentMatrixMagShimmer3[3][3];
+  double SensitivityMatrixMagShimmer3[3][3];
+  double OffsetVectorMagShimmer3[3];
 
 
   enum PacketType //: quint8
