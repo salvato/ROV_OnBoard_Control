@@ -476,8 +476,9 @@ ROV_App::writeRequest(QByteArray requestData) {
       QByteArray responseData = serialPort.readAll();
       while(serialPort.waitForReadyRead(10))
         responseData += serialPort.readAll();
-      QString response(responseData);
-      if(response != QString(ACK)) {
+      if (responseData.at(0) != ACK) {
+        QString response(responseData);
+//      if(response != QString(ACK)) {
         ErrorHandler(tr("NACK on Command %1: expecting %2 read %3")
                      .arg(int(requestData.at(0)))
                      .arg(int(ACK))
