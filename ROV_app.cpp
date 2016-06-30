@@ -377,17 +377,6 @@ ROV_App::onShimmerDisconnected(ShimmerSensor* currentShimmer) {
                 << currentShimmer->myRemoteAddress.toString()
                 << " Disconnected.";
   qDebug() << sDebugMessage;
-  if(bUseBluetooth)
-    currentShimmer->BtSetup();
-  else
-    currentShimmer->ComSetup();
-
-  sleep(3);
-
-  if(currentShimmer->currentStatus == connectedStatus) {
-    initShimmer(currentShimmer);
-    updateTimer.start(updateTime);
-  }
   //destroy();// <<========================================== To Be Changed !!!!!!!!!!!!!
 }
 
