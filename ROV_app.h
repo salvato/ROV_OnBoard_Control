@@ -51,10 +51,10 @@ public:
   int  init();
 
 public:
-  static const int UpDownAxis      = 1;
+  static const int upDownAxis      = 0;
+  static const int pitchAxis       = 1;
   static const int xAxisController = 2;
   static const int yAxisController = 3;
-  static const int RollAxis        = 4;
 
   static const int DeflateButton = 109;
   static const int InflateButton = 111;
@@ -98,6 +98,7 @@ private:
   int  writeRequest(QByteArray requestData);
   int  SetSpeed(int iX, int iY);
   int  SetUpDown(int newUpDown);
+  int  SetPitch(int newPitch);
   int  SwitchMotorDxOff();
   int  SwitchMotorDxForward();
   int  SwitchMotorDxReverse();
@@ -187,7 +188,8 @@ private:
     LeftReverse   = 76,
     RightSpeed    = 77,
     LeftSpeed     = 78,
-    UpDownServo   = 79
+    FrontThruster = 79,
+    BackThruster  = 80
   };
   commands command;
 
@@ -198,6 +200,7 @@ private:
   int           iLastControllerX;
   int           iLastControllerY;
   int           iLastUpDown;
+  int           iCurrentPitch;
 
   QByteArray    requestData;
 

@@ -698,10 +698,28 @@ int
 ROV_App::SetUpDown(int newUpDown) {
   if(newUpDown < -10) newUpDown = -10;
   if(newUpDown >  10) newUpDown =  10;
-  requestData = QByteArray(1, char(UpDownServo));
+  requestData = QByteArray(1, char(FrontThruster));
   requestData.append(char(newUpDown));
   iCurrentUpDown = newUpDown;
   //qDebug() << iCurrentUpDown;
+  writeRequest(requestData);
+  requestData = QByteArray(1, char(BackThruster));
+  requestData.append(char(newUpDown));
+  return writeRequest(requestData);
+}
+
+
+int
+ROV_App::SetPitch(int newPitch) {
+  if(newPitch < -10) newPitch = -10;
+  if(newPitch >  10) newPitch =  10;
+  requestData = QByteArray(1, char(FrontThruster));
+  requestData.append(char(newPitch));
+  iCurrentPitch = newPitch;
+  //qDebug() << iCurrentPitch;
+  writeRequest(requestData);
+  requestData = QByteArray(1, char(BackThruster));
+  requestData.append(char(-newPitch));
   return writeRequest(requestData);
 }
 
@@ -872,8 +890,10 @@ ROV_App::executeCommand(int iTarget, int iValue) {
     SetAirValveOut(iValue);
   } else if(iTarget == InflateButton) {
     SetAirValveIn(iValue);
-  } else if(iTarget == UpDownAxis) {
+  } else if(iTarget == upDownAxis) {
     SetUpDown(iValue);
+  } else if(iTarget == pitchAxis) {
+    SetPitch(iValue);
   } else if(iTarget == 126) {
       connectionWatchDogTimer.start(connectionWatchDogTime);
       if(pTcpServerConnection) {
