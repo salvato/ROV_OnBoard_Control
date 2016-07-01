@@ -339,6 +339,7 @@ ROV_App::onNewShimmerConnected(ShimmerSensor* currentShimmer) {
   qDebug() << sDebugMessage;
 
   currentShimmer->currentStatus = connectedStatus;
+  sleep(1);
   initShimmer(currentShimmer);
   updateTimer.start(updateTime);
 }
