@@ -94,8 +94,8 @@ ROV_App::ROV_App(int argc, char *argv[])
   , shimmerWatchDogTime(30000)
 
 #ifdef Q_PROCESSOR_ARM
-  , shimmerBtAdress(QBluetoothAddress("00:06:66:66:94:B9"))
-//  , shimmerBtAdress(QBluetoothAddress("00:06:66:66:93:FF"))
+//  , shimmerBtAdress(QBluetoothAddress("00:06:66:66:94:B9"))
+  , shimmerBtAdress(QBluetoothAddress("00:06:66:66:93:FF"))
 #else
   , shimmerBtAdress(QBluetoothAddress("00:06:66:66:93:FF"))
 #endif
