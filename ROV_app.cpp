@@ -487,8 +487,9 @@ ROV_App::writeRequest(QByteArray requestData) {
         //return -1;
       }
     } else {
-      ErrorHandler(tr(" Wait read response timeout %1")
-                   .arg(QTime::currentTime().toString()));
+      ErrorHandler(tr(" Wait read response timeout %1 %2")
+                   .arg(QTime::currentTime().toString())
+                   .arg(serialPort.portName()));
       return -1;
     }
   } else {
