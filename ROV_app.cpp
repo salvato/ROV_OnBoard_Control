@@ -431,7 +431,7 @@ ROV_App::connectToArduino() {
     if(serialPort.isOpen()) continue;
     if(serialPort.open(QIODevice::ReadWrite)) {
       requestData = QByteArray(2, char(AreYouThere));
-      sleep(1);
+      sleep(2);
       if(writeRequest(requestData) == 0)
         found = true;
       else
