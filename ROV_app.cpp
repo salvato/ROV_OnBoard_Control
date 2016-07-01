@@ -253,12 +253,12 @@ ROV_App::init() {
 
   bUseBluetooth = CheckBluetoothSupport();
 
-//  if(!bUseBluetooth) {
-//    sCommand = QString("rfcomm unbind 0");
-//    int iResult = system(sCommand.toLatin1());
-//    sCommand = QString("rfcomm bind 0 ") + shimmerBtAdress.toString();
-//    iResult = system(sCommand.toLatin1());
-//  }
+  if(!bUseBluetooth) {
+    sCommand = QString("rfcomm unbind 0");
+    int iResult = system(sCommand.toLatin1());
+    sCommand = QString("rfcomm bind 0 ") + shimmerBtAdress.toString();
+    iResult = system(sCommand.toLatin1());
+  }
 
   // Sensors to enable for each Shimmer
   activeSensors    = Shimmer3::SensorGyro |
