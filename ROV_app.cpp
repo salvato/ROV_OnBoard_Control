@@ -315,15 +315,15 @@ ROV_App::init() {
   connect(pShimmerSensor, SIGNAL(ackReceived(ShimmerSensor*)),
           this, SLOT(onAckReceived(ShimmerSensor*)));
 
-  if(bUseBluetooth)
-    pShimmerSensor->BtSetup();
-  else
-    pShimmerSensor->ComSetup();
-
   if(connectToArduino()) {
     ErrorHandler(QString("no Arduino ready to use !"));
 //    return -1;
   }
+
+  if(bUseBluetooth)
+    pShimmerSensor->BtSetup();
+  else
+    pShimmerSensor->ComSetup();
 
   return SetSpeed(0, 0);
 }
