@@ -253,12 +253,13 @@ ROV_App::init() {
 
   bUseBluetooth = CheckBluetoothSupport();
 
-  if(!bUseBluetooth) {
-    sCommand = QString("rfcomm unbind 0");
-    int iResult = system(sCommand.toLatin1());
-    sCommand = QString("rfcomm bind 0 ") + shimmerBtAdress.toString();
-    iResult = system(sCommand.toLatin1());
-  }
+
+//  if(!bUseBluetooth) {
+//    sCommand = QString("rfcomm unbind 0");
+//    int iResult = system(sCommand.toLatin1());
+//    sCommand = QString("rfcomm bind 0 ") + shimmerBtAdress.toString();
+//    iResult = system(sCommand.toLatin1());
+//  }
 
   // Sensors to enable for each Shimmer
   activeSensors    = Shimmer3::SensorGyro |
@@ -424,8 +425,10 @@ ROV_App::connectToArduino() {
   QSerialPortInfo info;
   for(int i=0; i<serialPorts.size()&& !found; i++) {
     info = serialPorts.at(i);
+    if(!info.portName().contains("tty")) continue;
     serialPort.setPortName(info.portName());
     serialPort.setBaudRate(115200);
+    if(serialPort.isOpen()) continue;
     if(serialPort.open(QIODevice::ReadWrite)) {
       requestData = QByteArray(2, char(AreYouThere));
       sleep(1);
