@@ -120,10 +120,12 @@ ROV_App::ROV_App(int argc, char *argv[])
   // Status Variables
   , MotorDxStatus(MotorOff)
   , MotorSnStatus(MotorOff)
-  , iCurrentUpDown(0)
 
-  , iLastControllerX(0)
-  , iLastControllerY(0)
+  , iLastSpeedX(0)
+  , iLastSpeedY(0)
+  , iLastSpeedFront(0)
+  , iLastSpeedRear(0)
+
   , iLastUpDown(0)
 
   , updateTime(100)
@@ -447,13 +449,6 @@ ROV_App::connectToArduino() {
 
 
 int
-ROV_App::setSpeedAndSteering(int iX, int iY) {
-  if(SetSpeed(iX, iY) != 0) return -1;
-  return 0;
-}
-
-
-int
 ROV_App::SetSpeed(int iX, int iY) {
   if(SetMotorDxSpeed(iX+iY) != 0) {
     return -1;
@@ -691,32 +686,34 @@ ROV_App::SetMotorSnSpeed(int newSpeed) {
 
 
 int
-ROV_App::SetUpDown(int newUpDown) {
-  if(newUpDown < -10) newUpDown = -10;
-  if(newUpDown >  10) newUpDown =  10;
-  requestData = QByteArray(1, char(FrontThruster));
-  requestData.append(char(newUpDown));
-  iCurrentUpDown = newUpDown;
-  //qDebug() << iCurrentUpDown;
-  writeRequest(requestData);
-  requestData = QByteArray(1, char(BackThruster));
-  requestData.append(char(newUpDown));
-  return writeRequest(requestData);
+ROV_App::SetThrusterSpeed(int iFrontSpeed, int iRearSpeed) {
+    if(SetFrontThrusterSpeed(iFrontSpeed+iRearSpeed) != 0) {
+      return -1;
+    }
+    if(SetRearThrusterSpeed(iRearSpeed-iFrontSpeed) != 0) {
+      return -1;
+    }
+    return 0;
 }
 
 
 int
-ROV_App::SetPitch(int newPitch) {
-  if(newPitch < -10) newPitch = -10;
-  if(newPitch >  10) newPitch =  10;
-  requestData = QByteArray(1, char(FrontThruster));
-  requestData.append(char(newPitch));
-  iCurrentPitch = newPitch;
-  //qDebug() << iCurrentPitch;
-  writeRequest(requestData);
-  requestData = QByteArray(1, char(BackThruster));
-  requestData.append(char(-newPitch));
-  return writeRequest(requestData);
+ROV_App::SetFrontThrusterSpeed(int newSpeed) {
+    if(newSpeed < -10) newSpeed = -10;
+    if(newSpeed >  10) newSpeed =  10;
+    requestData = QByteArray(1, char(FrontThruster));
+    requestData.append(char(newSpeed));
+    return writeRequest(requestData);
+}
+
+
+int
+ROV_App::SetRearThrusterSpeed(int newSpeed) {
+    if(newSpeed < -10) newSpeed = -10;
+    if(newSpeed >  10) newSpeed =  10;
+    requestData = QByteArray(1, char(BackThruster));
+    requestData.append(char(newSpeed));
+    return writeRequest(requestData);
 }
 
 
@@ -867,39 +864,52 @@ ROV_App::readFromServer() {
 
 void
 ROV_App::executeCommand(int iTarget, int iValue) {
-  if(iTarget == yAxisController) {
-    iValue = - iValue;
-    //qDebug() << "x=" << iLastControllerX << "y=" << iValue;
-    if(setSpeedAndSteering(iLastControllerX, iValue) != 0) {
-      ErrorHandler("Unable to set Motor speeds");
-      return;
-    }
-    iLastControllerY = iValue;
-  } else if(iTarget == xAxisController) {
-    //qDebug() << "x=" << iValue << "y=" << iLastControllerY;
-    if(setSpeedAndSteering(iValue, iLastControllerY) != 0) {
-      ErrorHandler("Unable to set Motor speeds");
-      return;
-    }
-    iLastControllerX = iValue;
-  } else if(iTarget == DeflateButton) {
-    SetAirValveOut(iValue);
-  } else if(iTarget == InflateButton) {
-    SetAirValveIn(iValue);
-  } else if(iTarget == upDownAxis) {
-    SetUpDown(iValue);
-  } else if(iTarget == pitchAxis) {
-    SetPitch(iValue);
-  } else if(iTarget == 126) {
-      connectionWatchDogTimer.start(connectionWatchDogTime);
-      if(pTcpServerConnection) {
-        if(pTcpServerConnection->isOpen()) {
-          QString message;
-            message = QString("alive#");
-            pTcpServerConnection->write(message.toLatin1());
+    if(iTarget == yAxisController) {
+          iValue = - iValue;
+        if(SetSpeed(iLastSpeedX, iValue) != 0) {
+          ErrorHandler("Unable to set Motor speeds");
+          return;
         }
-      }
-  }
+        iLastSpeedY = iValue;
+    }
+    else if(iTarget == xAxisController) {
+        if(SetSpeed(iValue, iLastSpeedY) != 0) {
+          ErrorHandler("Unable to set Motor speeds");
+          return;
+        }
+        iLastSpeedX = iValue;
+    }
+    else if(iTarget == DeflateButton) {
+        SetAirValveOut(iValue);
+    }
+    else if(iTarget == InflateButton) {
+        SetAirValveIn(iValue);
+    }
+    else if(iTarget == pitchAxis) {
+        iValue = - iValue;
+        if(SetThrusterSpeed(iLastSpeedFront, iValue) != 0) {
+          ErrorHandler("Unable to set Motor speeds");
+          return;
+        }
+        iLastSpeedRear = iValue;
+    }
+    else if(iTarget == upDownAxis) {
+        if(SetThrusterSpeed(iValue, iLastSpeedRear) != 0) {
+          ErrorHandler("Unable to set Motor speeds");
+          return;
+        }
+        iLastSpeedFront = iValue;
+    }
+    else if(iTarget == 126) {
+        connectionWatchDogTimer.start(connectionWatchDogTime);
+        if(pTcpServerConnection) {
+            if(pTcpServerConnection->isOpen()) {
+              QString message;
+                message = QString("alive#");
+                pTcpServerConnection->write(message.toLatin1());
+            }
+        }
+    }
 }
 
 

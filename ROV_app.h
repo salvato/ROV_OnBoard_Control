@@ -97,8 +97,9 @@ private:
   void ErrorHandler(QString sErrorString);
   int  writeRequest(QByteArray requestData);
   int  SetSpeed(int iX, int iY);
-  int  SetUpDown(int newUpDown);
-  int  SetPitch(int newPitch);
+  int  SetThrusterSpeed(int iFrontSpeed, int iRearSpeed);
+  int  SetFrontThrusterSpeed(int newSpeed);
+  int  SetRearThrusterSpeed(int newSpeed);
   int  SwitchMotorDxOff();
   int  SwitchMotorDxForward();
   int  SwitchMotorDxReverse();
@@ -107,7 +108,6 @@ private:
   int  SwitchMotorSnReverse();
   int  SetMotorDxSpeed(int newSpeed);
   int  SetMotorSnSpeed(int newSpeed);
-  int  setSpeedAndSteering(int iX, int iY);
   int  SetAirValveIn(int iValue);
   int  SetAirValveOut(int iValue);
 
@@ -196,9 +196,10 @@ private:
   // Status Variables
   motorStatus   MotorDxStatus;
   motorStatus   MotorSnStatus;
-  int           iCurrentUpDown;
-  int           iLastControllerX;
-  int           iLastControllerY;
+  int           iLastSpeedX;
+  int           iLastSpeedY;
+  int           iLastSpeedFront;
+  int           iLastSpeedRear;
   int           iLastUpDown;
   int           iCurrentPitch;
 
