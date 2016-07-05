@@ -1098,6 +1098,7 @@ ROV_App::onSamplingRateObtained(ShimmerSensor *currentShimmer) {
   if(currentShimmer->currentStatus == waitingSamplingRateStatus) {
     sDebugMessage = QString();
     sInformation  << dateTime.currentDateTime().toString()
+                  << " "
                   << currentShimmer->myRemoteAddress.toString()
                   << " SamplingRateObtained ";
     qDebug() << sDebugMessage;
@@ -1106,6 +1107,7 @@ ROV_App::onSamplingRateObtained(ShimmerSensor *currentShimmer) {
     currentShimmer->currentStatus = waitingGeneralInquireStatus;
     sDebugMessage = QString();
     sInformation  << dateTime.currentDateTime().toString()
+                  << " "
                   << currentShimmer->myRemoteAddress.toString()
                   << " Asking General Inquire Status";
     qDebug() << sDebugMessage;
@@ -1122,6 +1124,7 @@ ROV_App::onGeneralInquiryObtained(ShimmerSensor *currentShimmer) {
     {
         sDebugMessage = QString();
         sInformation  << dateTime.currentDateTime().toString()
+                      << " "
                       << currentShimmer->myRemoteAddress.toString()
                       << " GeneralInquiryObtained";
         quint8 data[4];
@@ -1134,8 +1137,9 @@ ROV_App::onGeneralInquiryObtained(ShimmerSensor *currentShimmer) {
         currentShimmer->currentStatus = waitingExgRegs1Status;
         sDebugMessage = QString();
         sInformation  << dateTime.currentDateTime().toString()
-                    << currentShimmer->myRemoteAddress.toString()
-                    << " Asking ExgRegs1Status";
+                      << " "
+                      << currentShimmer->myRemoteAddress.toString()
+                      << " Asking ExgRegs1Status";
         qDebug() << sDebugMessage;
     }
   }
@@ -1147,6 +1151,7 @@ ROV_App::onExgRegs1Obtained(ShimmerSensor *currentShimmer) {
   if(currentShimmer->currentStatus == waitingExgRegs1Status) {
     sDebugMessage = QString();
     sInformation  << dateTime.currentDateTime().toString()
+                  << " "
                   << currentShimmer->myRemoteAddress.toString()
                   << " exgRegs1Obtained ";
     qDebug() << sDebugMessage;
@@ -1163,6 +1168,7 @@ ROV_App::onExgRegs1Obtained(ShimmerSensor *currentShimmer) {
       currentShimmer->currentStatus = waitingExgRegs2Status;
       sDebugMessage = QString();
       sInformation  << dateTime.currentDateTime().toString()
+                    << " "
                     << currentShimmer->myRemoteAddress.toString()
                     << " Asking ExgRegs2Status";
       qDebug() << sDebugMessage;
@@ -1175,6 +1181,7 @@ void
 ROV_App::onExgRegs2Obtained(ShimmerSensor *currentShimmer) {
   sDebugMessage = QString();
   sInformation  << dateTime.currentDateTime().toString()
+                << " "
                 << currentShimmer->myRemoteAddress.toString()
                 << " exgRegs2Obtained";
   qDebug() << sDebugMessage;
@@ -1183,6 +1190,7 @@ ROV_App::onExgRegs2Obtained(ShimmerSensor *currentShimmer) {
   currentShimmer->currentStatus = waitingCalibrationStatus;
   sDebugMessage = QString();
   sInformation  << dateTime.currentDateTime().toString()
+                << " "
                 << currentShimmer->myRemoteAddress.toString()
                 << " Asking All Calibrations";
   qDebug() << sDebugMessage;
@@ -1207,8 +1215,9 @@ ROV_App::setupAcquisition(ShimmerSensor *currentShimmer) {
     if(!(currentShimmer->GetSensors() & activeSensors)) {
       sDebugMessage = QString();
       sInformation  << dateTime.currentDateTime().toString()
-                    << " Wrong configuration for "
-                    << currentShimmer->myRemoteAddress.toString();
+                    << " "
+                    << currentShimmer->myRemoteAddress.toString()
+                    << " Wrong configuration for ";
       qDebug() << sDebugMessage;
       throw QString("Wrong configuration !");
     }
@@ -1272,7 +1281,7 @@ ROV_App::onAckReceived(ShimmerSensor *currentShimmer) {
     sInformation  << dateTime.currentDateTime().toString()
                   << " "
                   << currentShimmer->myRemoteAddress.toString()
-                  << " setAcceleratorRange() !";
+                  << " setAcceleratorRange()";
     qDebug() << sDebugMessage;
     setAcceleratorRange(currentShimmer);
     return;
@@ -1292,7 +1301,7 @@ ROV_App::onAckReceived(ShimmerSensor *currentShimmer) {
     sInformation  << dateTime.currentDateTime().toString()
                   << " "
                   << currentShimmer->myRemoteAddress.toString()
-                  << " setMagGain() !";
+                  << " setMagGain()";
     qDebug() << sDebugMessage;
     setMagGain(currentShimmer);
     return;
@@ -1302,7 +1311,7 @@ ROV_App::onAckReceived(ShimmerSensor *currentShimmer) {
     sInformation  << dateTime.currentDateTime().toString()
                   << " "
                   << currentShimmer->myRemoteAddress.toString()
-                  << " setAdcSamplingRate() !";
+                  << " setAdcSamplingRate()";
     qDebug() << sDebugMessage;
     setAdcSamplingRate(currentShimmer);
     return;
@@ -1312,7 +1321,7 @@ ROV_App::onAckReceived(ShimmerSensor *currentShimmer) {
     sInformation  << dateTime.currentDateTime().toString()
                   << " "
                   << currentShimmer->myRemoteAddress.toString()
-                  << " getSamplingRate() !";
+                  << " getSamplingRate()";
     qDebug() << sDebugMessage;
     getSamplingRate(currentShimmer);
     getSamplingRate(currentShimmer);
