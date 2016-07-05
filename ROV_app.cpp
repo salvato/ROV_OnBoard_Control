@@ -1098,13 +1098,17 @@ ROV_App::onSamplingRateObtained(ShimmerSensor *currentShimmer) {
   if(currentShimmer->currentStatus == waitingSamplingRateStatus) {
     sDebugMessage = QString();
     sInformation  << dateTime.currentDateTime().toString()
-                  << " SamplingRateObtained "
                   << currentShimmer->myRemoteAddress.toString()
-                  << " Asking ExgRegs1Status";
+                  << " SamplingRateObtained ";
     qDebug() << sDebugMessage;
     quint8 data = (quint8)Shimmer3::INQUIRY_COMMAND;
     currentShimmer->writeCommand(&data, 1);
     currentShimmer->currentStatus = waitingGeneralInquireStatus;
+    sDebugMessage = QString();
+    sInformation  << dateTime.currentDateTime().toString()
+                  << currentShimmer->myRemoteAddress.toString()
+                  << " Asking General Inquire Status";
+    qDebug() << sDebugMessage;
   }
 }
 
@@ -1116,20 +1120,23 @@ ROV_App::onGeneralInquiryObtained(ShimmerSensor *currentShimmer) {
         (currentShimmer->GetFirmwareVersion() == 0.2 &&
          currentShimmer->GetFirmwareInternal()>=8))
     {
-      quint8 data[4];
-      currentShimmer->chipID = 1;
-      data[0] = (quint8) Shimmer3::GET_EXG_REGS_COMMAND;
-      data[1] = 0;
-      data[2] = 0;
-      data[3] = 10;
-      currentShimmer->writeCommand(data, 4);
-      currentShimmer->currentStatus = waitingExgRegs1Status;
-      sDebugMessage = QString();
-      sInformation  << dateTime.currentDateTime().toString()
-                    << " GeneralInquiryObtained "
+        sDebugMessage = QString();
+        sInformation  << dateTime.currentDateTime().toString()
+                      << currentShimmer->myRemoteAddress.toString()
+                      << " GeneralInquiryObtained";
+        quint8 data[4];
+        currentShimmer->chipID = 1;
+        data[0] = (quint8) Shimmer3::GET_EXG_REGS_COMMAND;
+        data[1] = 0;
+        data[2] = 0;
+        data[3] = 10;
+        currentShimmer->writeCommand(data, 4);
+        currentShimmer->currentStatus = waitingExgRegs1Status;
+        sDebugMessage = QString();
+        sInformation  << dateTime.currentDateTime().toString()
                     << currentShimmer->myRemoteAddress.toString()
                     << " Asking ExgRegs1Status";
-      qDebug() << sDebugMessage;
+        qDebug() << sDebugMessage;
     }
   }
 }
@@ -1138,6 +1145,11 @@ ROV_App::onGeneralInquiryObtained(ShimmerSensor *currentShimmer) {
 void
 ROV_App::onExgRegs1Obtained(ShimmerSensor *currentShimmer) {
   if(currentShimmer->currentStatus == waitingExgRegs1Status) {
+    sDebugMessage = QString();
+    sInformation  << dateTime.currentDateTime().toString()
+                  << currentShimmer->myRemoteAddress.toString()
+                  << " exgRegs1Obtained ";
+    qDebug() << sDebugMessage;
     quint8 data[4];
     if ((currentShimmer->GetFirmwareVersion() >= 0.3) ||
         (currentShimmer->GetFirmwareVersion() == 0.2 && currentShimmer->GetFirmwareInternal()>=8))
@@ -1151,7 +1163,6 @@ ROV_App::onExgRegs1Obtained(ShimmerSensor *currentShimmer) {
       currentShimmer->currentStatus = waitingExgRegs2Status;
       sDebugMessage = QString();
       sInformation  << dateTime.currentDateTime().toString()
-                    << " exgRegs1Obtained "
                     << currentShimmer->myRemoteAddress.toString()
                     << " Asking ExgRegs2Status";
       qDebug() << sDebugMessage;
@@ -1162,12 +1173,16 @@ ROV_App::onExgRegs1Obtained(ShimmerSensor *currentShimmer) {
 
 void
 ROV_App::onExgRegs2Obtained(ShimmerSensor *currentShimmer) {
+  sDebugMessage = QString();
+  sInformation  << dateTime.currentDateTime().toString()
+                << currentShimmer->myRemoteAddress.toString()
+                << " exgRegs2Obtained";
+  qDebug() << sDebugMessage;
   quint8 data = (quint8)Shimmer3::GET_ALL_CALIBRATION_COMMAND;
   currentShimmer->writeCommand(&data, 1);
   currentShimmer->currentStatus = waitingCalibrationStatus;
   sDebugMessage = QString();
   sInformation  << dateTime.currentDateTime().toString()
-                << " exgRegs2Obtained "
                 << currentShimmer->myRemoteAddress.toString()
                 << " Asking All Calibrations";
   qDebug() << sDebugMessage;
