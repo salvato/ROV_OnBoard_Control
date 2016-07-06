@@ -69,9 +69,9 @@ public slots:
   void onShimmerWatchDogTimeout(ShimmerSensor *currentShimmer);
   void forwardDebugMessage(QString sDebugMessage);
   void onConnectionWatchDogTimeout();
+  void switchOff();
 
 private slots:
-  void switchOff();
   void iWantToCloseTimerTimeout();
   void newTcpConnection();
   void onNewShimmerConnected(ShimmerSensor* currentShimmer);
@@ -213,6 +213,7 @@ private:
   qint32        connectionWatchDogTime;
 
   QString       sUsbDeviceFile;
+  volatile bool done;
 };
 
 #endif // ROV_APP_H

@@ -1,5 +1,6 @@
 #include "ROV_app.h"
 
+#include <csignal>
 #include <math.h>
 #include <errno.h>
 #include <unistd.h>// for sleep()
@@ -57,7 +58,6 @@ void myMessageOutput(QtMsgType type, const QMessageLogContext &context, const QS
 
 
 /*
-
 // rename example
 #include <stdio.h>
 
@@ -75,6 +75,8 @@ int main ()
 }
 
 */
+
+
 
 ROV_App::ROV_App(int argc, char *argv[])
   : QCoreApplication(argc, argv)
@@ -130,6 +132,8 @@ ROV_App::ROV_App(int argc, char *argv[])
 
   , updateTime(100)
   , connectionWatchDogTime(10000)
+
+  , done(false)
 {
   sInformation.setString(&sDebugMessage);
 
@@ -171,15 +175,15 @@ ROV_App::ROV_App(int argc, char *argv[])
   minMotorSn = -10.0;
   maxMotorSn =  10.0;
 
+  connect(this, SIGNAL(aboutToQuit()), this, SLOT(switchOff()));
+
   init();
-  connect(&connectionWatchDogTimer, SIGNAL(timeout()),
-          this, SLOT(onConnectionWatchDogTimeout()));
+
+  connect(&connectionWatchDogTimer, SIGNAL(timeout()), this, SLOT(onConnectionWatchDogTimeout()));
 }
 
 
 ROV_App::~ROV_App() {
-  if(pTcpServer) pTcpServer->close();
-  serialPort.close();
 }
 
 
@@ -190,7 +194,10 @@ ROV_App::destroy() {
     if(pShimmerSensor->currentStatus != unconnectedStatus)
       pShimmerSensor->disconnect();
   }
-  exit(0);
+  if(pTcpServer)          pTcpServer->close();
+  if(serialPort.isOpen()) serialPort.close();
+  printf("\nCleanup done\n");
+  quit();
 }
 
 
@@ -213,9 +220,10 @@ ROV_App::switchOff() {
   if(pShimmerSensor) {
     stopStreaming();
     niWantToCloseAttempt = 0;
-    connect(&iWantToCloseTimer, SIGNAL(timeout()),
-            this, SLOT(iWantToCloseTimerTimeout()));
+    connect(&iWantToCloseTimer, SIGNAL(timeout()), this, SLOT(iWantToCloseTimerTimeout()));
     iWantToCloseTimer.start(500);
+    qDebug() << dateTime.currentDateTime().toString()
+             << " Stopping streaming ...";
   } else {
     qDebug() << dateTime.currentDateTime().toString()
              << " No streaming sensors: Closing ...";
@@ -240,7 +248,9 @@ ROV_App::iWantToCloseTimerTimeout() {
     iWantToCloseTimer.start(500);
     sDebugMessage = QString();
     sInformation  << dateTime.currentDateTime().toString()
-                  << " Shimmers still streaming";
+                  << " "
+                  << pShimmerSensor->myRemoteAddress.toString()
+                  << " Shimmer still streaming";
     qDebug() << sDebugMessage;
   }
 }
@@ -254,7 +264,6 @@ ROV_App::init() {
   }
 
   bUseBluetooth = CheckBluetoothSupport();
-
 
 //  if(!bUseBluetooth) {
 //    sCommand = QString("rfcomm unbind 0");
@@ -320,7 +329,6 @@ ROV_App::init() {
 
   if(connectToArduino()) {
     ErrorHandler(QString("no Arduino ready to use !"));
-//    return -1;
   }
 
   if(bUseBluetooth)
@@ -381,7 +389,6 @@ ROV_App::onShimmerDisconnected(ShimmerSensor* currentShimmer) {
                 << currentShimmer->myRemoteAddress.toString()
                 << " Disconnected.";
   qDebug() << sDebugMessage;
-  //destroy();// <<========================================== To Be Changed !!!!!!!!!!!!!
 }
 
 
@@ -482,7 +489,6 @@ ROV_App::writeRequest(QByteArray requestData) {
                      .arg(int(requestData.at(0)))
                      .arg(int(ACK))
                      .arg(int(response.at(0).toLatin1())));
-        //return -1;
       }
     } else {
       ErrorHandler(tr(" Wait read response timeout %1 %2")
@@ -750,7 +756,7 @@ ROV_App::openTcpSession() {
   // if we did not find one, use IPv4 localhost
   if(ipAddress.isEmpty()) ipAddress = QHostAddress(QHostAddress::LocalHost).toString();
   sDebugMessage = QString();
-  sInformation  << " Running TCP-IP server at address " + ipAddress + " port: "
+  sInformation  << "Running TCP-IP server at address " + ipAddress + " port: "
                 << pTcpServer->serverPort();
   qDebug() << sDebugMessage;
   return 0;
@@ -916,11 +922,11 @@ ROV_App::executeCommand(int iTarget, int iValue) {
 void
 ROV_App::onShimmerStatusReceived(ShimmerSensor* currentShimmer, quint8 shimmerStatus) {
   sDebugMessage = QString();
-  sInformation  << dateTime.currentDateTime().toString()
-                << " "
-                << currentShimmer->myRemoteAddress.toString()
-                << " Shimmer status received: "
-                << shimmerStatus;
+  sInformation << dateTime.currentDateTime().toString()
+               << " "
+               << currentShimmer->myRemoteAddress.toString()
+               << " Shimmer status received: "
+               << shimmerStatus;
   qDebug() << sDebugMessage;
   AskFirmwareVersion(currentShimmer);
 }
@@ -939,19 +945,19 @@ void
 ROV_App::onFirmwareRead(ShimmerSensor *currentShimmer) {
   if(currentShimmer->GetFirmwareVersionFullName() == tr("BoilerPlate 0.1.0")) {
     sDebugMessage = QString();
-    sInformation  << dateTime.currentDateTime().toString()
-                  << " "
-                  << currentShimmer->myRemoteAddress.toString()
-                  << " is Not a Shimmer3 model !";
+    sInformation << dateTime.currentDateTime().toString()
+                 << " "
+                 << currentShimmer->myRemoteAddress.toString()
+                 << " is Not a Shimmer3 model !";
     qDebug() << sDebugMessage;
     return;
   }
   if(currentShimmer->GetFirmwareVersion() == 1.2) {
     sDebugMessage = QString();
-    sInformation  << dateTime.currentDateTime().toString()
-                  << " "
-                  << currentShimmer->myRemoteAddress.toString()
-                  << " Shimmer3 bad firmware version found !";
+    sInformation << dateTime.currentDateTime().toString()
+                 << " "
+                 << currentShimmer->myRemoteAddress.toString()
+                 << " Shimmer3 bad firmware version found !";
     qDebug() << sDebugMessage;
     return;
   }
@@ -959,10 +965,10 @@ ROV_App::onFirmwareRead(ShimmerSensor *currentShimmer) {
   currentShimmer->writeCommand(&data, 1);
 
   sDebugMessage = QString();
-  sInformation  << dateTime.currentDateTime().toString()
-                << " "
-                << currentShimmer->myRemoteAddress.toString()
-                << " Asking Shimmer Version";
+  sInformation << dateTime.currentDateTime().toString()
+               << " "
+               << currentShimmer->myRemoteAddress.toString()
+               << " Asking Shimmer Version";
   qDebug() << sDebugMessage;
 
   currentShimmer->currentStatus = waitingShimmerVersStatus;
@@ -974,10 +980,10 @@ ROV_App::onShimmerVersionRead(ShimmerSensor *currentShimmer) {
   if(currentShimmer->currentStatus != waitingShimmerVersStatus) return;
   if(currentShimmer->GetShimmerVersion() != (int)Shimmer::SHIMMER3) {
     sDebugMessage = QString();
-    sInformation  << dateTime.currentDateTime().toString()
-                  << " "
-                  << currentShimmer->myRemoteAddress.toString()
-                  << " No Shimmer3 device !";
+    sInformation << dateTime.currentDateTime().toString()
+                 << " "
+                 << currentShimmer->myRemoteAddress.toString()
+                 << " No Shimmer3 device !";
     qDebug() << sDebugMessage;
     return;
   }
@@ -1291,7 +1297,7 @@ ROV_App::onAckReceived(ShimmerSensor *currentShimmer) {
     sInformation  << dateTime.currentDateTime().toString()
                   << " "
                   << currentShimmer->myRemoteAddress.toString()
-                  << " setGyroRange() !";
+                  << " setGyroRange()";
     qDebug() << sDebugMessage;
     setGyroRange(currentShimmer);
     return;
