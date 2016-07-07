@@ -133,7 +133,7 @@ ROV_App::ROV_App(int argc, char *argv[])
   , updateTime(100)
   , connectionWatchDogTime(10000)
 
-  , done(false)
+  , waitingDepth(false)
 {
   sInformation.setString(&sDebugMessage);
 
@@ -175,7 +175,8 @@ ROV_App::ROV_App(int argc, char *argv[])
   minMotorSn = -10.0;
   maxMotorSn =  10.0;
 
-  connect(this, SIGNAL(aboutToQuit()), this, SLOT(switchOff()));
+//  connect(this, SIGNAL(aboutToQuit()), this, SLOT(switchOff()));
+  connect(this, SIGNAL(destroyMe()), this, SLOT(destroy()));
 
   init();
 
@@ -227,6 +228,7 @@ ROV_App::switchOff() {
   } else {
     qDebug() << dateTime.currentDateTime().toString()
              << " No streaming sensors: Closing ...";
+    iWantToCloseTimer.stop();
     emit destroyMe();
   }
 }
@@ -291,8 +293,6 @@ ROV_App::init() {
                                      shimmerComPort,
                                      0);
 
-  connect(this,           SIGNAL(destroyMe()),
-          this, SLOT(destroy()));
   connect(&updateTimer,   SIGNAL(timeout()),
           this, SLOT(periodicUpdateWidgets()));
   connect(pShimmerSensor, SIGNAL(sendDebugMessage(QString)),
@@ -480,15 +480,23 @@ ROV_App::writeRequest(QByteArray requestData) {
   if (serialPort.waitForBytesWritten(waitTimeout)) {
     if (serialPort.waitForReadyRead(waitTimeout)) {
       QByteArray responseData = serialPort.readAll();
-      while(serialPort.waitForReadyRead(10))
+      while(serialPort.waitForReadyRead(100))
         responseData += serialPort.readAll();
       if (responseData.at(0) != ACK) {
         QString response(responseData);
-//      if(response != QString(ACK)) {
         ErrorHandler(tr("NACK on Command %1: expecting %2 read %3")
                      .arg(int(requestData.at(0)))
                      .arg(int(ACK))
                      .arg(int(response.at(0).toLatin1())));
+      } else {
+        if(waitingDepth) {
+            while(serialPort.waitForReadyRead(100))
+              responseData += serialPort.readAll();
+            qint16 depth =(responseData.at(4) << 12) + (responseData.at(3) << 8) + (responseData.at(2) << 4) + responseData.at(1);
+            sendDepth(depth);
+//            qDebug() << "Depth " << depth << " cm";
+            waitingDepth = false;
+        }
       }
     } else {
       ErrorHandler(tr(" Wait read response timeout %1 %2")
@@ -503,6 +511,17 @@ ROV_App::writeRequest(QByteArray requestData) {
     return -1;
   }
   return 0;
+}
+
+void
+ROV_App::sendDepth(int depth) {
+    if(pTcpServerConnection) {
+      if(pTcpServerConnection->isOpen()) {
+        QString message;
+          message = QString("depth %1#").arg(depth);
+          pTcpServerConnection->write(message.toLatin1());
+      }
+    }
 }
 
 
@@ -521,6 +540,15 @@ ROV_App::SetAirValveOut(int iValue) {
   requestData = QByteArray(1, char(DeflateValve));
   requestData.append(char(dataOutput));
   return writeRequest(requestData);
+}
+
+
+int
+ROV_App::GetRovDepth() {
+    requestData = QByteArray(1, char(GetDepth));
+    requestData.append(char(0));
+    waitingDepth = true;
+    return writeRequest(requestData);
 }
 
 
@@ -894,19 +922,31 @@ ROV_App::executeCommand(int iTarget, int iValue) {
     else if(iTarget == pitchAxis) {
         iValue = - iValue;
         if(SetThrusterSpeed(iLastSpeedFront, iValue) != 0) {
-          ErrorHandler("Unable to set Motor speeds");
+          ErrorHandler("Unable to set Thruster speeds");
           return;
         }
         iLastSpeedRear = iValue;
     }
     else if(iTarget == upDownAxis) {
         if(SetThrusterSpeed(iValue, iLastSpeedRear) != 0) {
-          ErrorHandler("Unable to set Motor speeds");
+          ErrorHandler("Unable to set Thruster speeds");
           return;
         }
         iLastSpeedFront = iValue;
     }
-    else if(iTarget == 126) {
+    else if(iTarget == depthSensor) {
+        if(GetRovDepth() != 0) {
+          ErrorHandler("Unable to ask ROV depth");
+          return;
+        }
+        iLastSpeedFront = iValue;
+    }
+    else if(iTarget == SetOrientation) {
+        if(pShimmerSensor) {
+            pShimmerSensor->isWaitingOrientation = true;
+        }
+    }
+    else if(iTarget == StillAlive) {
         connectionWatchDogTimer.start(connectionWatchDogTime);
         if(pTcpServerConnection) {
             if(pTcpServerConnection->isOpen()) {

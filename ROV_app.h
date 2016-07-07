@@ -51,13 +51,17 @@ public:
   int  init();
 
 public:
-  static const int upDownAxis      = 0;
-  static const int pitchAxis       = 1;
-  static const int xAxisController = 2;
-  static const int yAxisController = 3;
+  static const int upDownAxis      =   0;
+  static const int pitchAxis       =   1;
+  static const int xAxisController =   2;
+  static const int yAxisController =   3;
 
-  static const int DeflateButton = 109;
-  static const int InflateButton = 111;
+  static const int depthSensor     =  81;
+
+  static const int DeflateButton   = 109;
+  static const int InflateButton   = 111;
+  static const int SetOrientation  = 125;
+  static const int StillAlive      = 126;
 
 public slots:
   void destroy();
@@ -110,6 +114,8 @@ private:
   int  SetMotorSnSpeed(int newSpeed);
   int  SetAirValveIn(int iValue);
   int  SetAirValveOut(int iValue);
+  int  GetRovDepth();
+  void sendDepth(int depth);
 
   int  openTcpSession();
   int  connectToArduino();
@@ -189,7 +195,8 @@ private:
     RightSpeed    = 77,
     LeftSpeed     = 78,
     FrontThruster = 79,
-    BackThruster  = 80
+    BackThruster  = 80,
+    GetDepth      = 81
   };
   commands command;
 
@@ -213,7 +220,7 @@ private:
   qint32        connectionWatchDogTime;
 
   QString       sUsbDeviceFile;
-  volatile bool done;
+  volatile bool waitingDepth;
 };
 
 #endif // ROV_APP_H
