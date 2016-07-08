@@ -96,8 +96,8 @@ ROV_App::ROV_App(int argc, char *argv[])
   , shimmerWatchDogTime(30000)
 
 #ifdef Q_PROCESSOR_ARM
-//  , shimmerBtAdress(QBluetoothAddress("00:06:66:66:94:B9"))
-  , shimmerBtAdress(QBluetoothAddress("00:06:66:66:93:FF"))
+  , shimmerBtAdress(QBluetoothAddress("00:06:66:66:94:B9"))
+//  , shimmerBtAdress(QBluetoothAddress("00:06:66:66:93:FF"))
 #else
   , shimmerBtAdress(QBluetoothAddress("00:06:66:66:93:FF"))
 #endif
@@ -476,7 +476,7 @@ ROV_App::writeRequest(QByteArray requestData) {
   if (serialPort.waitForBytesWritten(waitTimeout)) {
     if (serialPort.waitForReadyRead(waitTimeout)) {
       QByteArray responseData = serialPort.readAll();
-      while(serialPort.waitForReadyRead(10))
+      while(serialPort.waitForReadyRead(1))
         responseData += serialPort.readAll();
       if (responseData.at(0) != ACK) {
         QString response(responseData);
@@ -487,7 +487,7 @@ ROV_App::writeRequest(QByteArray requestData) {
       } else {
         if(waitingDepth) {
             if(responseData.length() < 5) {
-                while(serialPort.waitForReadyRead(10))
+                while(serialPort.waitForReadyRead(1))
                     responseData += serialPort.readAll();
             }
             qint16 depth =(responseData.at(4) << 12) + (responseData.at(3) << 8) + (responseData.at(2) << 4) + responseData.at(1);
