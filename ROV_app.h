@@ -18,26 +18,6 @@
 QT_FORWARD_DECLARE_CLASS(Shimmer3Box)
 QT_FORWARD_DECLARE_CLASS(QBluetoothLocalDevice)
 
-typedef signed char        int8;
-typedef unsigned char      uInt8;
-typedef signed short       int16;
-typedef unsigned short     uInt16;
-typedef signed long        int32;
-typedef unsigned long      uInt32;
-typedef float              float32;
-typedef double             float64;
-#if defined(__linux__) || defined(__APPLE__)
-typedef long long int      int64;
-#else
-typedef __int64            int64;
-#endif
-#if defined(__linux__) || defined(__APPLE__)
-typedef unsigned long long uInt64;
-#else
-typedef unsigned __int64   uInt64;
-#endif
-typedef uInt32               bool32;
-
 
 class
 ROV_App : public QCoreApplication
@@ -162,25 +142,25 @@ private:
   QString                shimmerComPort;
   ShimmerSensor*         pShimmerSensor;
 
-  int32         error;
+  qint32         error;
   QString       sString;
   QString       sCommand;
   QString       sDebugMessage;
   char          ACK;
   QByteArray    message;
 
-  float64       minMotorDx;
-  float64       maxMotorDx;
-  float64       minMotorSn;
-  float64       maxMotorSn;
+  double       minMotorDx;
+  double       maxMotorDx;
+  double       minMotorSn;
+  double       maxMotorSn;
 
-  uInt8         MOTOR_OFF;
-  uInt8         MOTOR_ON;
-  uInt8         MOTOR_FORWARD;
-  uInt8         MOTOR_REVERSE;
+  quint8         MOTOR_OFF;
+  quint8         MOTOR_ON;
+  quint8         MOTOR_FORWARD;
+  quint8         MOTOR_REVERSE;
 
-  uInt8         AIR_VALVE_OFF;
-  uInt8         AIR_VALVE_ON;
+  quint8         AIR_VALVE_OFF;
+  quint8         AIR_VALVE_ON;
 
   enum motorStatus {MotorOff, MotorForward, MotorReverse};
 
@@ -207,8 +187,6 @@ private:
   int           iLastSpeedY;
   int           iLastSpeedFront;
   int           iLastSpeedRear;
-  int           iLastUpDown;
-  int           iCurrentPitch;
 
   QByteArray    requestData;
 

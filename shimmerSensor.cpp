@@ -345,7 +345,9 @@ ShimmerSensor::serialRead() {
     sDebugMessage = QString();
     sInformation << dateTime.currentDateTime().toString()
                  << myRemoteAddress.toString()
-                 << "socket->errorString() ";
+                 << " "
+                 << serialPort->portName()
+                 << " Not Open ";
     if(pParent) {
       emit sendDebugMessage(sDebugMessage);
     } else {
@@ -372,7 +374,9 @@ ShimmerSensor::socketError(QBluetoothSocket::SocketError error) {
   if(socket) {
     sDebugMessage = QString();
     sInformation << dateTime.currentDateTime().toString()
+                 << " "
                  << myRemoteAddress.toString()
+                 << " "
                  << socket->errorString() ;
     if(pParent) {
       emit sendDebugMessage(sDebugMessage);
@@ -536,8 +540,9 @@ ShimmerSensor::retrievecalibrationparametersfrompacket(quint8 *bufferCalibration
     sDebugMessage = QString();
     sInformation << dateTime.currentDateTime().toString()
                  << myRemoteAddress.toString()
+                 << " "
                  << sError
-                 << "in retrievecalibrationparametersfrompacket()";
+                 << " in retrievecalibrationparametersfrompacket()";
     if(pParent) {
       emit sendDebugMessage(sDebugMessage);
     } else {

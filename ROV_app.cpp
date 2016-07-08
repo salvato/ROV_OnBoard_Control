@@ -128,8 +128,6 @@ ROV_App::ROV_App(int argc, char *argv[])
   , iLastSpeedFront(0)
   , iLastSpeedRear(0)
 
-  , iLastUpDown(0)
-
   , updateTime(100)
   , connectionWatchDogTime(10000)
 
@@ -175,11 +173,8 @@ ROV_App::ROV_App(int argc, char *argv[])
   minMotorSn = -10.0;
   maxMotorSn =  10.0;
 
-//  connect(this, SIGNAL(aboutToQuit()), this, SLOT(switchOff()));
   connect(this, SIGNAL(destroyMe()), this, SLOT(destroy()));
-
   init();
-
   connect(&connectionWatchDogTimer, SIGNAL(timeout()), this, SLOT(onConnectionWatchDogTimeout()));
 }
 
@@ -278,9 +273,9 @@ ROV_App::init() {
   activeSensors    = Shimmer3::SensorGyro |
                      Shimmer3::SensorMag;
   if(bUseLowNoiseAccelerator)
-    activeSensors  |= Shimmer3::SensorAAccel;// Use the Low Noise Analog Accelerometer
+    activeSensors |= Shimmer3::SensorAAccel;// Use the Low Noise Analog Accelerometer
   else
-    activeSensors  |= Shimmer3::SensorDAccel;// Use the Wide Range Digital Accelerometer (default)
+    activeSensors |= Shimmer3::SensorDAccel;// Use the Wide Range Digital Accelerometer (default)
 
   // Sensors Ranges & sampling rate
   acceleratorRange = Shimmer3::RANGE_16_0G;
@@ -470,17 +465,18 @@ ROV_App::SetSpeed(int iX, int iY) {
 void
 ROV_App::ErrorHandler(QString sErrorString) {
   // MUST BE MODIFIED !!
-  qDebug() << "Error ! " << sErrorString << endl;
+  qDebug() << "ErrorHandler(): " << sErrorString;
 }
 
 
 int
 ROV_App::writeRequest(QByteArray requestData) {
+  if(!serialPort.isOpen()) return -1;
   serialPort.write(requestData.append(char(127)));
   if (serialPort.waitForBytesWritten(waitTimeout)) {
     if (serialPort.waitForReadyRead(waitTimeout)) {
       QByteArray responseData = serialPort.readAll();
-      while(serialPort.waitForReadyRead(100))
+      while(serialPort.waitForReadyRead(10))
         responseData += serialPort.readAll();
       if (responseData.at(0) != ACK) {
         QString response(responseData);
@@ -490,8 +486,10 @@ ROV_App::writeRequest(QByteArray requestData) {
                      .arg(int(response.at(0).toLatin1())));
       } else {
         if(waitingDepth) {
-            while(serialPort.waitForReadyRead(100))
-              responseData += serialPort.readAll();
+            if(responseData.length() < 5) {
+                while(serialPort.waitForReadyRead(10))
+                    responseData += serialPort.readAll();
+            }
             qint16 depth =(responseData.at(4) << 12) + (responseData.at(3) << 8) + (responseData.at(2) << 4) + responseData.at(1);
             sendDepth(depth);
 //            qDebug() << "Depth " << depth << " cm";
@@ -513,6 +511,7 @@ ROV_App::writeRequest(QByteArray requestData) {
   return 0;
 }
 
+
 void
 ROV_App::sendDepth(int depth) {
     if(pTcpServerConnection) {
@@ -527,7 +526,7 @@ ROV_App::sendDepth(int depth) {
 
 int
 ROV_App::SetAirValveIn(int iValue) {
-  uInt8 dataOutput = iValue ? uInt8(AIR_VALVE_ON) : uInt8(AIR_VALVE_OFF);
+  quint8 dataOutput = iValue ? quint8(AIR_VALVE_ON) : quint8(AIR_VALVE_OFF);
   requestData = QByteArray(1, char(InflateValve));
   requestData.append(char(dataOutput));
   return writeRequest(requestData);
@@ -536,7 +535,7 @@ ROV_App::SetAirValveIn(int iValue) {
 
 int
 ROV_App::SetAirValveOut(int iValue) {
-  uInt8 dataOutput = iValue ? uInt8(AIR_VALVE_ON) : uInt8(AIR_VALVE_OFF);
+  quint8 dataOutput = iValue ? quint8(AIR_VALVE_ON) : quint8(AIR_VALVE_OFF);
   requestData = QByteArray(1, char(DeflateValve));
   requestData.append(char(dataOutput));
   return writeRequest(requestData);
@@ -555,14 +554,14 @@ ROV_App::GetRovDepth() {
 int
 ROV_App::SwitchMotorDxOff() {
   if(MotorDxStatus == MotorForward) {
-    uInt8 dataOutput = uInt8(MOTOR_OFF);
+    quint8 dataOutput = quint8(MOTOR_OFF);
     requestData = QByteArray(1, char(RightForward));
     requestData.append(char(dataOutput));
     if(writeRequest(requestData))
       return -1;
   }
   else if(MotorDxStatus == MotorReverse) {
-    uInt8 dataOutput = uInt8(MOTOR_OFF);
+    quint8 dataOutput = quint8(MOTOR_OFF);
     requestData = QByteArray(1, char(RightReverse));
     requestData.append(char(dataOutput));
     if(writeRequest(requestData))
@@ -578,13 +577,13 @@ ROV_App::SwitchMotorDxForward() {
   if(MotorDxStatus == MotorForward)
     return 0;
   if(MotorDxStatus == MotorReverse) {
-    uInt8 dataOutput = uInt8(MOTOR_OFF);
+    quint8 dataOutput = quint8(MOTOR_OFF);
     requestData = QByteArray(1, char(RightReverse));
     requestData.append(char(dataOutput));
     if(writeRequest(requestData))
       return -1;
   }
-  uInt8 dataOutput = uInt8(MOTOR_ON);
+  quint8 dataOutput = quint8(MOTOR_ON);
   requestData = QByteArray(1, char(RightForward));
   requestData.append(char(dataOutput));
   if(writeRequest(requestData))
@@ -599,13 +598,13 @@ ROV_App::SwitchMotorDxReverse() {
   if(MotorDxStatus == MotorReverse)
     return 0;
   if(MotorDxStatus == MotorForward) {
-    uInt8 dataOutput = uInt8(MOTOR_OFF);
+    quint8 dataOutput = quint8(MOTOR_OFF);
     requestData = QByteArray(1, char(RightForward));
     requestData.append(char(dataOutput));
     if(writeRequest(requestData))
       return -1;
   }
-  uInt8 dataOutput = uInt8(MOTOR_ON);
+  quint8 dataOutput = quint8(MOTOR_ON);
   requestData = QByteArray(1, char(RightReverse));
   requestData.append(char(dataOutput));
   if(writeRequest(requestData))
@@ -618,14 +617,14 @@ ROV_App::SwitchMotorDxReverse() {
 int
 ROV_App::SwitchMotorSnOff() {
   if(MotorSnStatus == MotorForward) {
-    uInt8 dataOutput = uInt8(MOTOR_OFF);
+    quint8 dataOutput = quint8(MOTOR_OFF);
     requestData = QByteArray(1, char(LeftForward));
     requestData.append(char(dataOutput));
     if(writeRequest(requestData))
       return -1;
   }
   else if(MotorSnStatus == MotorReverse) {
-    uInt8 dataOutput = uInt8(MOTOR_OFF);
+    quint8 dataOutput = quint8(MOTOR_OFF);
     requestData = QByteArray(1, char(LeftReverse));
     requestData.append(char(dataOutput));
     if(writeRequest(requestData))
@@ -641,13 +640,13 @@ ROV_App::SwitchMotorSnForward() {
   if(MotorSnStatus == MotorForward)
     return 0;
   if(MotorSnStatus == MotorReverse) {
-    uInt8 dataOutput = uInt8(MOTOR_OFF);
+    quint8 dataOutput = quint8(MOTOR_OFF);
     requestData = QByteArray(1, char(LeftReverse));
     requestData.append(char(dataOutput));
     if(writeRequest(requestData))
       return -1;
   }
-  uInt8 dataOutput = uInt8(MOTOR_ON);
+  quint8 dataOutput = quint8(MOTOR_ON);
   requestData = QByteArray(1, char(LeftForward));
   requestData.append(char(dataOutput));
   if(writeRequest(requestData))
@@ -662,13 +661,13 @@ ROV_App::SwitchMotorSnReverse() {
   if(MotorSnStatus == MotorReverse)
     return 0;
   if(MotorSnStatus == MotorForward) {
-    uInt8 dataOutput = uInt8(MOTOR_OFF);
+    quint8 dataOutput = quint8(MOTOR_OFF);
     requestData = QByteArray(1, char(LeftForward));
     requestData.append(char(dataOutput));
     if(writeRequest(requestData))
       return -1;
   }
-  uInt8 dataOutput = uInt8(MOTOR_ON);
+  quint8 dataOutput = quint8(MOTOR_ON);
   requestData = QByteArray(1, char(LeftReverse));
   requestData.append(char(dataOutput));
   if(writeRequest(requestData))
@@ -888,8 +887,8 @@ void
 ROV_App::readFromServer() {
   message.append(pTcpServerConnection->readAll());
   while(message.length() > 1) {
-    int iTarget = int(message.at(0));
-    int iValue = int8(message.at(1));
+    int iTarget = qint8(message.at(0));
+    int iValue = qint8(message.at(1));
     message.remove(0, 2);
     executeCommand(iTarget, iValue);
   }
@@ -939,7 +938,6 @@ ROV_App::executeCommand(int iTarget, int iValue) {
           ErrorHandler("Unable to ask ROV depth");
           return;
         }
-        iLastSpeedFront = iValue;
     }
     else if(iTarget == SetOrientation) {
         if(pShimmerSensor) {
