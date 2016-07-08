@@ -31,3 +31,6 @@ HEADERS += \
     shimmerdatapacket.h \
     graddes3dorientation.h \
     matrixUtil.h
+
+DISTFILES += \
+    PezziDiCodice.txt
