@@ -1332,6 +1332,7 @@ ROV_App::onConnectionWatchDogTimeout() {
   SetSpeed(0, 0);
   SetAirValveOut(AIR_VALVE_OFF);
   SetAirValveIn(AIR_VALVE_ON);
+  SetThrusterSpeed(0, 0);
   sDebugMessage = QString();
   sInformation << dateTime.currentDateTime().toString()
                << " Connection Timeout";
