@@ -1341,7 +1341,9 @@ ShimmerSensor::decodeCommand() {
           sDebugMessage = QString();
           sInformation << dateTime.currentDateTime().toString()
                        << myRemoteAddress.toString()
-                       << "Unknown header received from: ";
+                       << " Unknown header ("
+                       << quint8(readBuffer[0])
+                       << ") received";
           if(pParent) {
             emit sendDebugMessage(sDebugMessage);
           } else {

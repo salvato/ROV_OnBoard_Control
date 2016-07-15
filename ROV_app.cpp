@@ -1175,7 +1175,7 @@ ROV_App::setupAcquisition(ShimmerSensor *currentShimmer) {
     currentShimmer->enable3DOrientation = true;
 
     double samplingRate = 32768.0 / currentShimmer->GetAdcSamplingRate();
-    currentShimmer->mOrientation = new GradDes3DOrientation(0.4, (double)1.0/samplingRate, 1, 0, 0, 0);
+    currentShimmer->mOrientation = new GradDes3DOrientation(0.01, (double)1.0/samplingRate, 1, 0, 0, 0);
 
     currentShimmer->setGyroOnTheFlyCalibration(bEnableGyroOnTheFlyCalibration, 100, 1.2);
     currentShimmer->currentStatus = canStartStreamingStatus;
@@ -1287,12 +1287,12 @@ ROV_App::periodicUpdateWidgets() {
       QString message;
         message = QString("box_pos %1 %2 %3 %4 %5 %6 %7 %8#").
           arg(0).
-          arg(pShimmerSensor->shimmerBox.x).
-          arg(pShimmerSensor->shimmerBox.y).
-          arg(pShimmerSensor->shimmerBox.z).
-          arg(pShimmerSensor->shimmerBox.pos[0]).
-          arg(pShimmerSensor->shimmerBox.pos[1]).
-          arg(pShimmerSensor->shimmerBox.pos[2]).
+                arg(pShimmerSensor->shimmerBox.x).
+                arg(pShimmerSensor->shimmerBox.y).
+                arg(pShimmerSensor->shimmerBox.z).
+                arg(pShimmerSensor->shimmerBox.pos[0]).
+                arg(pShimmerSensor->shimmerBox.pos[1]).
+                arg(pShimmerSensor->shimmerBox.pos[2]).
           arg(pShimmerSensor->shimmerBox.angle);
         pTcpServerConnection->write(message.toLatin1());
     }
